@@ -1287,21 +1287,20 @@
         formData.flyerFileName = pdfFile.name;
       }
 
-      const response = await fetch(SCRIPT_URL, {
+      // Google Apps Script requires form-encoded POST to avoid CORS redirect issues
+      const encoded = new URLSearchParams({ data: JSON.stringify(formData) });
+
+      await fetch(SCRIPT_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: encoded.toString(),
       });
 
-      const result = await response.json();
-
-      if (result.success) {
-        document.getElementById('successOverlay').classList.add('visible');
-        document.querySelectorAll('.step-num').forEach(el => { el.className = 'step-num done'; });
-        document.querySelectorAll('.step-label').forEach(el => { el.className = 'step-label done'; });
-      } else {
-        throw new Error(result.message || 'Submission failed');
-      }
+      // no-cors means we can't read the response — assume success if no network error
+      document.getElementById('successOverlay').classList.add('visible');
+      document.querySelectorAll('.step-num').forEach(el => { el.className = 'step-num done'; });
+      document.querySelectorAll('.step-label').forEach(el => { el.className = 'step-label done'; });
 
     } catch (err) {
       alert('There was a problem submitting your report. Please try again or contact the Technology Committee.\n\nError: ' + err.message);
